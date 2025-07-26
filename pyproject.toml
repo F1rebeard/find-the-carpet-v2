@@ -1,0 +1,36 @@
+[project]
+name = "find-the-carpet-v2"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "aiogram>=3.21.0",
+    "aiogram-dialog>=2.4.0",
+    "aiosqlite>=0.21.0",
+    "alembic>=1.16.3",
+    "loguru>=0.7.3",
+    "msgspec>=0.19.0",
+    "sqlalchemy>=2.0.41",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "isort>=6.0.1",
+    "pre-commit>=4.2.0",
+    "ruff>=0.12.2",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py311', 'py312', 'py313']
+skip-string-normalization = false
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+
+[tool.ruff]
+line-length = 100
