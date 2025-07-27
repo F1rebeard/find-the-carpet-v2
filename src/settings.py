@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     DATABASE: DatabaseSettings
     BOT_TOKEN: str
     LOG_LEVEL: str = "INFO"
+    ADMIN_IDS: list[int] = []
 
     model_config = SettingsConfigDict(
         env_file=".env",

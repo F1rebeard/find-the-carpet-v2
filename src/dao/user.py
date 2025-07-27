@@ -21,6 +21,17 @@ class UserDAO:
             raise
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
+            raise
+
+    async def get_banned_user_by_id(self, telegram_id: int) -> BannedUser | None:
+        try:
+            return await self.session.get(BannedUser, telegram_id)
+        except SQLAlchemyError as e:
+            logger.error(f"❌ Failed to get user by id: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            raise
 
     async def search_registered_user(self, search_text: str) -> Sequence[RegisteredUser]:
         stmt = select(RegisteredUser).where(
@@ -42,6 +53,7 @@ class UserDAO:
             raise
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
+            raise
 
     async def add_pending_user(self, user_data: UserRegistrationInput):
         try:
@@ -52,6 +64,7 @@ class UserDAO:
             raise
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
+            raise
 
     async def approve_user(self, telegram_id: int, chosen_role: str):
         pending_user = await self.get_pending_user_by_id(telegram_id)
@@ -85,7 +98,14 @@ class UserDAO:
             last_name=user_to_ban.last_name,
             email=user_to_ban.email,
         )
-        self.session.add(banned_user)
-        await self.session.delete(user_to_ban)
-        logger.info(f"User with id: {telegram_id} banned")
-        return True
+        try:
+            self.session.add(banned_user)
+            await self.session.delete(user_to_ban)
+            logger.info(f"User with id: {telegram_id} banned")
+            return True
+        except SQLAlchemyError as e:
+            logger.error(f"❌ Failed to get banned user by id: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            raise
