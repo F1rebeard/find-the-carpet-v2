@@ -8,10 +8,21 @@ from src.logger import setup_logger
 from src.settings import bot, dp
 
 
+def register_routers():
+    """Register all bot routers."""
+
+    from src.bot.handlers.start_command import start_command_router
+
+    dp.include_router(start_command_router)
+    logger.info("🔗 Routers registered")
+
+
 @contextlib.asynccontextmanager
 async def app_lifecycle():
     setup_logger()
     logger.info("🚀 Starting...")
+    register_routers()
+
     await db.connect()
     try:
         yield {"telegram_bot": bot}

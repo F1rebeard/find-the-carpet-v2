@@ -32,11 +32,6 @@ class StartCommandMessages:
     unknown_error: str = "⚠️ Что-то пошло не так. Пожалуйста, попробуйте снова."
     processing_error: str = "⚠️ Что-то пошло не так. Попробуйте позже"
 
-    def get_welcome_admin_with_name(self, name: str = "") -> str:
-        """Get an admin welcome message with optional name."""
-
-        return f"{self.welcome_admin} {name}!".strip()
-
     def get_welcome_registered_with_name(self, name: str) -> str:
         """Get a registered user welcome message with name."""
 

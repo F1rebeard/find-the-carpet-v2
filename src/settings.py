@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
 base_settings = Settings()
 bot_properties = DefaultBotProperties(
-    parse_mode=ParseMode.MARKDOWN_V2,
+    parse_mode=ParseMode.HTML,
 )
 bot = Bot(token=base_settings.BOT_TOKEN, default=bot_properties)
 dp = Dispatcher()

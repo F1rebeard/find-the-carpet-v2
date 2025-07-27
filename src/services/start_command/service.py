@@ -11,7 +11,7 @@ from src.database.models import BannedUser, PendingUser, RegisteredUser
 from src.settings import base_settings as settings
 
 
-class UserType(enum.Enum, str):
+class UserType(str, enum.Enum):
     """User type for /start command logic."""
 
     NEW_USER = "new_user"
@@ -21,7 +21,7 @@ class UserType(enum.Enum, str):
     BANNED_USER = "banned_user"
 
 
-class StartCommandAction(enum.Enum, str):
+class StartCommandAction(str, enum.Enum):
     """Actions for start command responses."""
 
     SHOW_REGISTRATION = "show_registration"
@@ -82,11 +82,10 @@ class StartCommandService:
         try:
             if telegram_id in self.admins_ids:
                 logger.info(f"👑 Admin user detected: {telegram_id}")
-                registered_user = await self.user_dao.get_registered_user_by_id(telegram_id)
                 return UserInfo(
                     user_type=UserType.ADMIN,
                     telegram_id=telegram_id,
-                    user_data=registered_user,
+                    user_data=None,
                     is_admin=True,
                 )
 
@@ -169,10 +168,9 @@ class StartCommandService:
     async def _handle_admin(user_info: UserInfo) -> StartCommandResponse:
         """Handle an admin user."""
         logger.info(f"👑 Handling admin user: {user_info.telegram_id}")
-        admin_name = user_info.user_data.first_name if user_info.user_data.first_name else ""
         return StartCommandResponse(
             action=StartCommandAction.SHOW_ADMIN_PANEL,
-            message=messages.get_welcome_admin_with_name(name=admin_name),
+            message=messages.welcome_admin,
             user_type=user_info.user_type.value,
             show_admin_menu=True,
             user_data=user_info.user_data.to_dict() if user_info.user_data else None,
@@ -185,7 +183,7 @@ class StartCommandService:
         user_name = user_info.user_data.first_name if user_info.user_data.first_name else ""
         return StartCommandResponse(
             action=StartCommandAction.SHOW_MAIN_MENU,
-            message=messages.get_welcome_user_with_name(name=user_name),
+            message=messages.get_welcome_registered_with_name(name=user_name),
             user_type=user_info.user_type.value,
             show_main_menu=True,
             user_data=user_info.user_data.to_dict(),
