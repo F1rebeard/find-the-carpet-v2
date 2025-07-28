@@ -1,7 +1,7 @@
 """Initial tables
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2025-07-27 14:20:51.643179
 
 """

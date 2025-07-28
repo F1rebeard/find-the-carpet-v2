@@ -1,4 +1,3 @@
-import msgspec
 from loguru import logger
 from sqlalchemy import Sequence, or_, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -57,7 +56,7 @@ class UserDAO:
 
     async def add_pending_user(self, user_data: UserRegistrationInput):
         try:
-            self.session.add(PendingUser(**msgspec.to_builtins(user_data)))
+            self.session.add(PendingUser(**user_data.model_dump()))
             logger.info(f"✅ User {user_data.telegram_id} added to pending users")
         except SQLAlchemyError as e:
             logger.error(f"❌ Failed to add pending user by id: {e}")

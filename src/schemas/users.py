@@ -1,7 +1,7 @@
-from msgspec import Struct
+from pydantic import BaseModel
 
 
-class UserRegistrationInput(Struct, kw_only=True):
+class UserRegistrationInput(BaseModel):
     telegram_id: int
     username: str | None = None
     first_name: str

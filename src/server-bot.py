@@ -1,20 +1,26 @@
 import asyncio
 import contextlib
 
+from aiogram_dialog import setup_dialogs
 from loguru import logger
 
+from src.bot.dialogs.registration import registration_dialog, registration_router
+from src.bot.handlers.start_command import start_command_router
 from src.database import db
 from src.logger import setup_logger
 from src.settings import bot, dp
 
 
 def register_routers():
-    """Register all bot routers."""
-
-    from src.bot.handlers.start_command import start_command_router
-
     dp.include_router(start_command_router)
+    dp.include_router(registration_router)
     logger.info("🔗 Routers registered")
+
+
+def register_dialogs():
+    setup_dialogs(dp)
+    dp.include_router(registration_dialog)
+    logger.info("🔗 Dialogs registered")
 
 
 @contextlib.asynccontextmanager
@@ -22,6 +28,7 @@ async def app_lifecycle():
     setup_logger()
     logger.info("🚀 Starting...")
     register_routers()
+    register_dialogs()
 
     await db.connect()
     try:

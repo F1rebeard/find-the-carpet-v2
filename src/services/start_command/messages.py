@@ -1,5 +1,9 @@
 import dataclasses
 
+from aiogram.types import InlineKeyboardMarkup
+
+from src.services.user_registration.messages import messages as reg_messages
+
 
 @dataclasses.dataclass
 class StartCommandMessages:
@@ -15,7 +19,7 @@ class StartCommandMessages:
     )
     banned_message: str = "🚫 Ваш аккаунт заблокирован."
     error_message: str = "❌ Произошла ошибка. Пожалуйста, попробуйте позже."
-    new_user_instructions: str = "📝 Используйте /register для начала процесса регистрации."
+    new_user_instructions: str = "📝 Используйте кнопку ниже для начала процесса регистрации."
     admin_menu: str = (
         "🛠 Команды администратора:\n"
         "👨‍💼 /admin - Панель администратора\n"
@@ -34,13 +38,16 @@ class StartCommandMessages:
 
     def get_welcome_registered_with_name(self, name: str) -> str:
         """Get a registered user welcome message with name."""
-
         return f"{self.welcome_registered}, {name}!"
+
+    @staticmethod
+    def get_registration_keyboard() -> InlineKeyboardMarkup:
+        """Get inline keyboard for new user registration."""
+        return reg_messages.get_start_keyboard()
 
     @staticmethod
     def get_full_message(base_message: str, additional_info: str = "") -> str:
         """Combine a base message with additional information."""
-
         if additional_info:
             return f"{base_message}\n\n{additional_info}"
         return base_message

@@ -4,11 +4,11 @@ from aiogram.types import Message
 from loguru import logger
 
 from src.database import db
-from src.services.start_command.messages import messages
-from src.services.start_command.service import (
+from src.services.start_command import (
     StartCommandAction,
     StartCommandResponse,
     StartCommandService,
+    messages,
 )
 
 start_command_router = Router()
@@ -20,7 +20,8 @@ async def _send_response_by_action(message: Message, response: StartCommandRespo
     match response.action:
         case StartCommandAction.SHOW_REGISTRATION:
             await message.answer(
-                messages.get_full_message(response.message, messages.new_user_instructions)
+                text=messages.get_full_message(response.message, messages.new_user_instructions),
+                reply_markup=messages.get_registration_keyboard(),
             )
 
         case StartCommandAction.SHOW_ADMIN_PANEL:
