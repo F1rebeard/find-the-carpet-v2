@@ -1,53 +1,20 @@
 from aiogram import F, Router
 from aiogram.enums import ContentType
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Cancel
-from aiogram_dialog.widgets.text import Const
+from aiogram_dialog.widgets.kbd import Back, Button, Cancel, Row
+from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
+from bot.handlers.registration import skip_phone_handler
+from src.bot.handlers.registration import RegistrationFieldHandler, save_registration_data
+from src.bot.handlers.utils import data_getter, reject_non_text
 from src.database import db
 from src.services.user_registration import RegistrationService, RegistrationStatesGroup, messages
+from src.services.user_registration.models import DialogStructure, DialogWindowData
 
 registration_router = Router()
-
-
-async def reject_non_text(
-    message: Message, message_input: MessageInput, dialog_manager: DialogManager
-):
-    """Handle non-text messages."""
-    await message.answer(messages.non_text_error)
-
-
-async def first_name_handler(
-    message: Message, message_input: MessageInput, dialog_manager: DialogManager
-):
-    """Handle and validate first name input."""
-    telegram_id = message.from_user.id
-    username = message.from_user.username
-
-    async with db.get_session() as session:
-        registration_service = RegistrationService(session)
-        validation = registration_service.validate_field(
-            field_name="first_name",
-            value=message.text.strip(),
-            telegram_id=telegram_id,
-            username=username,
-        )
-
-    if not validation.is_valid:
-        await message.answer(f"❌ {validation.error_message}")
-        return
-
-    dialog_manager.dialog_data["first_name"] = message.text.strip()
-    logger.info(f"👤 First name saved for user {telegram_id}")
-    await dialog_manager.switch_to(RegistrationStatesGroup.last_name)
-
-
-async def data_getter(dialog_manager: DialogManager, **kwargs):
-    """Get data from a dialog manager."""
-    return {"dialog_data": dialog_manager.dialog_data}
 
 
 @registration_router.callback_query(F.data == "start_registration")
@@ -66,20 +33,95 @@ async def start_registration_dialog(callback: CallbackQuery, dialog_manager: Dia
             state=RegistrationStatesGroup.first_name, mode=StartMode.RESET_STACK
         )
         await callback.answer()
-
     except Exception as e:
         logger.error(f"❌ Error starting registration dialog for {telegram_id}: {e}")
         await callback.message.answer("⚠️ Произошла ошибка при запуске регистрации")
         await callback.answer()
 
 
-registration_dialog = Dialog(
-    Window(
-        Const(messages.welcome_message),
-        MessageInput(first_name_handler, content_types=[ContentType.TEXT]),
-        MessageInput(reject_non_text),
-        Cancel(Const(messages.cancel_button)),
-        state=RegistrationStatesGroup.first_name,
-        getter=data_getter,
-    ),
+# first_name_handler = RegistrationFieldHandler("first_name", RegistrationStatesGroup.last_name)
+# last_name_handler = RegistrationFieldHandler("last_name", RegistrationStatesGroup.email)
+# email_handler = RegistrationFieldHandler("email", RegistrationStatesGroup.phone, normalize=str.lower)
+# phone_handler = RegistrationFieldHandler("phone", RegistrationStatesGroup.from_whom)
+# from_whom_handler = RegistrationFieldHandler("from_whom", RegistrationStatesGroup.confirmation)
+
+DIALOG_STRUCTURE = DialogStructure(
+    fields=[
+        DialogWindowData(
+            field="first_name",
+            prompt=messages.welcome_message,
+            next_state=RegistrationStatesGroup.last_name,
+        ),
+        DialogWindowData(
+            field="last_name",
+            prompt=messages.last_name_prompt,
+            next_state=RegistrationStatesGroup.email,
+        ),
+        DialogWindowData(
+            field="email",
+            prompt=messages.email_prompt,
+            next_state=RegistrationStatesGroup.phone,
+            normalize=str.lower,
+        ),
+        DialogWindowData(
+            field="phone",
+            prompt=messages.phone_prompt,
+            next_state=RegistrationStatesGroup.from_whom,
+            skip_button=True,
+        ),
+        DialogWindowData(
+            field="from_whom",
+            prompt=messages.from_whom_prompt,
+            next_state=RegistrationStatesGroup.confirmation,
+        ),
+    ]
 )
+
+dialogs_windows = []
+for window_data in DIALOG_STRUCTURE.fields:
+    handler = RegistrationFieldHandler(
+        field_name=window_data.field,
+        next_state=window_data.next_state,
+        normalize=window_data.normalize,
+    )
+    buttons = [
+        Back(Const(messages.back_button)),
+        Cancel(Const(messages.cancel_button)),
+    ]
+    if window_data.skip_button:
+        buttons.insert(
+            0,
+            Button(
+                Const(messages.skip_button),
+                id=f"skip_{window_data.field}",
+                on_click=skip_phone_handler,
+            ),
+        )
+    win = Window(
+        Const(window_data.prompt),
+        MessageInput(handler, content_types=[ContentType.TEXT]),
+        MessageInput(reject_non_text),
+        Row(*buttons),
+        state=getattr(RegistrationStatesGroup, window_data.field),
+    )
+    dialogs_windows.append(win)
+
+confirmation_window = Window(
+    Const(messages.confirmation_prompt),
+    Format(messages.confirmation_text),
+    Row(
+        Button(
+            Const(messages.confirm_button),
+            id="confirm_registration",
+            on_click=save_registration_data,
+        ),
+    ),
+    Row(
+        Back(Const(messages.edit_button)),
+        Cancel(Const(messages.cancel_button)),
+    ),
+    state=RegistrationStatesGroup.confirmation,
+    getter=data_getter,
+)
+
+registration_dialog = Dialog(*dialogs_windows, confirmation_window)

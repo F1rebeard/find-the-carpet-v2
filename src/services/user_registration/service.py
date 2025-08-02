@@ -14,6 +14,21 @@ class RegistrationService:
     def __init__(self, session: AsyncSession):
         self.user_dao = UserDAO(session)
 
+    @staticmethod
+    def _extract_clean_error_message(error_msg: str) -> str:
+        prefixes_to_remove = [
+            "Value error, ",
+            "Assertion failed, ",
+            "String should ",
+            "Input should ",
+        ]
+        clean_msg = error_msg
+        for prefix in prefixes_to_remove:
+            if clean_msg.startswith(prefix):
+                clean_msg = clean_msg[len(prefix) :]
+                break
+        return clean_msg
+
     def validate_field(
         self, field_name: str, value: str, telegram_id: int, username: Optional[str] = None
     ) -> ValidationResult:
@@ -58,11 +73,11 @@ class RegistrationService:
         except ValidationError as e:
             field_errors = [error for error in e.errors() if error["loc"] == (field_name,)]
             if field_errors:
-                error_message = field_errors[0]["msg"]
+                raw_error_message = field_errors[0]["msg"]
+                clean_error_message = self._extract_clean_error_message(raw_error_message)
             else:
-                error_message = "Ошибка валидации"
-
-            return ValidationResult(is_valid=False, error_message=error_message)
+                clean_error_message = "Ошибка валидации"
+            return ValidationResult(is_valid=False, error_message=clean_error_message)
 
         except Exception as e:
             logger.error(f"❌ Unexpected validation error for {field_name}: {e}")
@@ -140,7 +155,6 @@ class RegistrationService:
             Tuple of (exists, status_message)
         """
 
-        # TODO We check it during start!
         try:
             # Check if user is already registered
             registered_user = await self.user_dao.get_registered_user_by_id(telegram_id)

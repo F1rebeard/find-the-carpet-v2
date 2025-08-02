@@ -1,6 +1,9 @@
 import re
+from collections.abc import Callable
 
+from aiogram.fsm.state import State
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from src.schemas.users import UserRegistrationInput
 
@@ -28,7 +31,7 @@ class RegistrationData(BaseModel):
 
     @field_validator("first_name", "last_name")
     @classmethod
-    def validate_names(cls, v: str) -> str:
+    def validate_names(cls, v: str, info: ValidationInfo) -> str:
         """Validate first_name and last_name format."""
         if not v:
             raise ValueError("Поле не может быть пустым")
@@ -36,10 +39,8 @@ class RegistrationData(BaseModel):
         v = v.strip()
 
         if not NAME_PATTERN.match(v):
-            field_name = "Имя" if cls.model_fields.get("first_name") else "Фамилия"
-            raise ValueError(
-                f"{field_name} должно начинаться с заглавной буквы и содержать только буквы"
-            )
+            field_name = "Имя должно" if info.field_name == "first_name" else "Фамилия должна"
+            raise ValueError(f"{field_name} начинаться с заглавной буквы и содержать только буквы")
 
         return v
 
@@ -59,17 +60,23 @@ class RegistrationData(BaseModel):
 
     @field_validator("phone")
     @classmethod
-    def validate_phone(cls, v: str | None) -> str | None:
+    def validate_phone(cls, input_value: str | None) -> str | None:
         """Validate and format phone number."""
-        if v is None or v.strip() == "":
+        if input_value is None or input_value.strip() == "":
             return None
 
-        digits_only = PHONE_DIGITS_PATTERN.sub("", v.strip())
+        digits_only = PHONE_DIGITS_PATTERN.sub("", input_value.strip())
 
-        if len(digits_only) < 10 or len(digits_only) > 15:
-            raise ValueError("Номер телефона должен содержать от 10 до 15 цифр")
-
-        return f"+{digits_only}"
+        if digits_only.startswith("8"):
+            if len(digits_only) != 11:
+                raise ValueError("Некорректное число цифр для номера начинающегося с 8")
+            return f"+7{digits_only[1:]}"
+        elif digits_only.startswith("7"):
+            if len(digits_only) != 11:
+                raise ValueError("Некорректное число цифр для номера начинающегося с 7")
+            return f"+{digits_only}"
+        else:
+            raise ValueError("Номер должен начинаться с 8 или 7")
 
     @field_validator("from_whom")
     @classmethod
@@ -112,3 +119,19 @@ class ValidationResult(BaseModel):
     is_valid: bool
     error_message: str | None = None
     cleaned_value: str | None = None
+
+
+class DialogWindowData(BaseModel):
+    """Data for registration dialog windows."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    field: str = Field(..., description="Field name in dialog data")
+    prompt: str = Field(..., description="Prompt message for the registration step")
+    next_state: State = Field(..., description="Next FSM state for the registration step")
+    normalize: Callable | None = Field(None, description="Function for field normalization")
+    skip_button: bool = Field(False, description="Whether to show 'Skip' button for the step")
+
+
+class DialogStructure(BaseModel):
+    fields: list[DialogWindowData]
