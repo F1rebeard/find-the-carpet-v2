@@ -1,6 +1,6 @@
 from loguru import logger
 
-from src.settings import base_settings as settings
+from src.core_settings import base_settings as settings
 
 
 def setup_logger():

@@ -32,6 +32,18 @@ class UserDAO:
             logger.error(f"❌ Unexpected error: {e}")
             raise
 
+    async def get_all_registered_users(self) -> Sequence[RegisteredUser]:
+        try:
+            stmt = select(RegisteredUser)
+            all_registered_users = await self.session.execute(stmt)
+            return all_registered_users.scalars().all()
+        except SQLAlchemyError as e:
+            logger.error(f"❌ Failed to get all registered users: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            raise
+
     async def search_registered_user(self, search_text: str) -> Sequence[RegisteredUser]:
         stmt = select(RegisteredUser).where(
             or_(
@@ -60,29 +72,35 @@ class UserDAO:
             logger.info(f"✅ User {user_data.telegram_id} added to pending users")
         except SQLAlchemyError as e:
             logger.error(f"❌ Failed to add pending user by id: {e}")
-            raise
+            raise e
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
-            raise
+            raise e
 
     async def approve_user(self, telegram_id: int, chosen_role: str):
         pending_user = await self.get_pending_user_by_id(telegram_id)
         if not pending_user:
             logger.warning(f"No pending user found for id {telegram_id}")
             return
-
-        self.session.add(
-            RegisteredUser(
-                telegram_id=pending_user.telegram_id,
-                username=pending_user.username,
-                first_name=pending_user.first_name,
-                last_name=pending_user.last_name,
-                email=pending_user.email,
-                role=chosen_role,
+        try:
+            self.session.add(
+                RegisteredUser(
+                    telegram_id=pending_user.telegram_id,
+                    username=pending_user.username,
+                    first_name=pending_user.first_name,
+                    last_name=pending_user.last_name,
+                    email=pending_user.email,
+                    role=chosen_role,
+                )
             )
-        )
-        await self.session.delete(pending_user)
-        logger.info(f"User {telegram_id} approved with role {chosen_role}")
+            await self.session.delete(pending_user)
+            logger.info(f"User {telegram_id} approved with role {chosen_role}")
+        except SQLAlchemyError as e:
+            logger.error(f"❌ Failed to add pending user by id: {e}")
+            raise e
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            raise e
 
     async def ban_user(self, telegram_id: int) -> bool:
         user_to_ban = await self.get_registered_user_by_id(telegram_id)
@@ -104,7 +122,7 @@ class UserDAO:
             return True
         except SQLAlchemyError as e:
             logger.error(f"❌ Failed to get banned user by id: {e}")
-            raise
+            raise e
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
-            raise
+            raise e

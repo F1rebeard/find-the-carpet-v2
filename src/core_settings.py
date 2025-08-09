@@ -7,9 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseModel):
-    """
-    Database connection settings.
-    """
+    """Database connection settings."""
 
     url: str
     echo: bool = False
@@ -23,9 +21,7 @@ class DatabaseSettings(BaseModel):
 
 
 class Settings(BaseSettings):
-    """
-    App settings loaded from environment variables.
-    """
+    """App settings loaded from environment variables."""
 
     DATABASE: DatabaseSettings
     BOT_TOKEN: str

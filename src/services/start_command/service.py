@@ -5,10 +5,10 @@ import enum
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core_settings import base_settings as settings
 from services.start_command.messages import messages
 from src.dao.user import UserDAO
 from src.database.models import BannedUser, PendingUser, RegisteredUser
-from src.settings import base_settings as settings
 
 
 class UserType(str, enum.Enum):

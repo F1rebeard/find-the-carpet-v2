@@ -7,8 +7,11 @@ from aiogram_dialog.widgets.kbd import Back, Button, Cancel, Row
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
-from bot.handlers.registration import skip_phone_handler
-from src.bot.handlers.registration import RegistrationFieldHandler, save_registration_data
+from src.bot.handlers.registration import (
+    RegistrationFieldHandler,
+    save_registration_data,
+    skip_phone_handler,
+)
 from src.bot.handlers.utils import data_getter, reject_non_text
 from src.database import db
 from src.services.user_registration import RegistrationService, RegistrationStatesGroup, messages

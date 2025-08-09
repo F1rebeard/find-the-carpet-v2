@@ -6,8 +6,10 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from loguru import logger
 
-from services.user_registration import RegistrationService, messages
+from src.core_settings import base_settings, bot
 from src.database import db
+from src.services.admin.users_managment import AdminUserManagementService
+from src.services.user_registration import RegistrationService, messages
 
 
 class RegistrationFieldHandler:
@@ -61,6 +63,7 @@ async def save_registration_data(
     try:
         async with db.get_session() as session:
             registration_service = RegistrationService(session)
+            admin_service = AdminUserManagementService(session, bot)
             exists, status_message = await registration_service.check_existing_user(telegram_id)
             if exists:
                 await callback.message.answer(f"⚠️ {status_message}")
@@ -87,6 +90,10 @@ async def save_registration_data(
             )
             if success:
                 await callback.message.answer(messages.registration_success)
+                await admin_service.notify_admins_new_registration(
+                    admin_ids=base_settings.ADMIN_IDS,
+                    user_data=registration_data,
+                )
                 logger.info(f"✅ Registration completed for user {telegram_id}")
             else:
                 await callback.message.answer(messages.registration_error)

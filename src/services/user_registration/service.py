@@ -13,6 +13,7 @@ class RegistrationService:
 
     def __init__(self, session: AsyncSession):
         self.user_dao = UserDAO(session)
+        self.session = session
 
     @staticmethod
     def _extract_clean_error_message(error_msg: str) -> str:
