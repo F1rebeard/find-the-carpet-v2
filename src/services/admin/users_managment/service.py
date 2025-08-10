@@ -5,6 +5,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core_settings import base_settings
 from src.core_settings import dp as dispatcher
 from src.dao.user import UserDAO
 from src.database.models import PendingUser, RegisteredUser
@@ -166,6 +167,37 @@ class AdminUserManagementService:
         except Exception as e:
             logger.error(f"❌ Error banning user {telegram_id}: {e}")
             return False, messages.error_in_ban_process
+
+    async def get_all_registered_users_paginated(
+        self, page: int = 0, page_size: int = base_settings.INLINE_ROWS_PER_PAGE
+    ) -> tuple[list[RegisteredUser], int, int]:
+        """Get all registered users with pagination."""
+
+        offset = page * page_size
+        users, total_count = await self.user_dao.get_all_registered_users_paginated(
+            limit=page_size, offset=offset
+        )
+        total_pages = (total_count + page_size - 1) // page_size
+        return users, total_count, total_pages
+
+    async def search_registered_users(
+        self,
+        search_query: str,
+        page: int = 0,
+        page_size: int = base_settings.INLINE_ROWS_PER_PAGE,
+    ) -> tuple[list[RegisteredUser], int, int]:
+        """Search for registered users based on a search query."""
+
+        try:
+            offset = page * page_size
+            users, total_count = await self.user_dao.search_registered_users(
+                search_query, page_size, offset
+            )
+            total_pages = (total_count + page_size - 1) // page_size
+            return users, total_count, total_pages
+        except Exception as e:
+            logger.error(f"❌ Error getting users: {e}")
+            raise
 
     async def broadcast_message_to_registered_users(self, message: str) -> tuple[int, int]:
         """Send a message to all registered users.

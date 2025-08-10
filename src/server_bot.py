@@ -5,6 +5,7 @@ from aiogram.types import BotCommand, BotCommandScopeChat
 from aiogram_dialog import setup_dialogs
 from loguru import logger
 
+from src.bot.dialogs.admin.ban_user import ban_user_dialog
 from src.bot.dialogs.admin.pending_users import pending_users_dialog
 from src.bot.dialogs.registration import registration_dialog, registration_router
 from src.bot.handlers.admin_menu import admin_menu_router
@@ -37,6 +38,7 @@ def register_dialogs():
     setup_dialogs(dp)
     dp.include_router(registration_dialog)
     dp.include_router(pending_users_dialog)
+    dp.include_router(ban_user_dialog)
     logger.info("🔗 Dialogs registered")
 
 

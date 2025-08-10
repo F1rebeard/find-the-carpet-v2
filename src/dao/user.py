@@ -1,5 +1,5 @@
 from loguru import logger
-from sqlalchemy import Sequence, or_, select
+from sqlalchemy import Sequence, func, or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,18 +43,6 @@ class UserDAO:
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
             raise
-
-    async def search_registered_user(self, search_text: str) -> Sequence[RegisteredUser]:
-        stmt = select(RegisteredUser).where(
-            or_(
-                RegisteredUser.username.ilike(f"%{search_text}%"),
-                RegisteredUser.last_name.ilike(f"%{search_text}%"),
-                RegisteredUser.email.ilike(f"%{search_text}%"),
-                RegisteredUser.phone.ilike(f"%{search_text}%"),
-            )
-        )
-        found_users = await self.session.execute(stmt)
-        return found_users.scalars().all()
 
     async def get_pending_user_by_id(self, telegram_id: int) -> PendingUser | None:
         try:
@@ -126,3 +114,57 @@ class UserDAO:
         except Exception as e:
             logger.error(f"❌ Unexpected error: {e}")
             raise e
+
+    async def search_registered_users(
+        self, search_query: str, limit: int = None, offset: int = 0
+    ) -> tuple[list[RegisteredUser], int]:
+        try:
+            base_query = (
+                select(RegisteredUser)
+                .where(
+                    or_(
+                        RegisteredUser.phone.ilike(f"%{search_query}%"),
+                        RegisteredUser.username.ilike(f"%{search_query}%"),
+                        RegisteredUser.last_name.ilike(f"%{search_query}%"),
+                        RegisteredUser.email.ilike(f"%{search_query}%"),
+                    )
+                )
+                .order_by(RegisteredUser.first_name)
+            )
+
+            count_query = select(func.count()).select_from(base_query.subquery())
+            total_count: int = await self.session.scalar(count_query)
+            if limit:
+                base_query = base_query.limit(limit).offset(offset)
+            result = await self.session.execute(base_query)
+            users = list(result.scalars().all())
+            return users, total_count
+
+        except SQLAlchemyError as e:
+            logger.error(f"❌ Failed to get selected registered user: {e}")
+            raise e
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            raise e
+
+    async def get_all_registered_users_paginated(
+        self, limit: int = None, offset: int = 0
+    ) -> tuple[list[RegisteredUser], int]:
+        """Get all registered users with pagination."""
+        try:
+            count_query = select(func.count(RegisteredUser.telegram_id))
+            total_count = await self.session.scalar(count_query)
+            stmt = select(RegisteredUser).order_by(RegisteredUser.first_name)
+            if limit:
+                stmt = stmt.limit(limit).offset(offset)
+            result = await self.session.execute(stmt)
+            users = list(result.scalars().all())
+            return users, total_count
+
+        except SQLAlchemyError as e:
+            logger.error(f"❌ Failed to get all registered users: {e}")
+            raise
+
+        except Exception as e:
+            logger.error(f"❌ Unexpected error: {e}")
+            raise

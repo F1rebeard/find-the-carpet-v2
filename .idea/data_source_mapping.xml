@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/src/database/seeds/seed_test_users.sql" value="ea9b1543-ee05-4d7c-90e9-1261e0f3216f" />
+  </component>
+</project>

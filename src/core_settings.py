@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     LOG_LEVEL: str = "INFO"
     ADMIN_IDS: list[int] = []
+    INLINE_ROWS_PER_PAGE: int = 3
 
     model_config = SettingsConfigDict(
         env_file=".env",

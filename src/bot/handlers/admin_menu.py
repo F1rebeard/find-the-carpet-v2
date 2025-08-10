@@ -85,7 +85,7 @@ async def start_ban_user_dialog(callback: CallbackQuery, dialog_manager: DialogM
     """Start ban user dialog."""
     try:
         await dialog_manager.start(
-            state=states.BanUserStatesGroup.telegram_id, mode=StartMode.RESET_STACK
+            state=states.BanUserStatesGroup.user_search, mode=StartMode.RESET_STACK
         )
         await callback.answer()
         logger.info(f"🚫 Admin {callback.from_user.id} started ban user dialog")

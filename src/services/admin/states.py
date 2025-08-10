@@ -26,7 +26,9 @@ class AddUserStatesGroup(StatesGroup):
 class BanUserStatesGroup(StatesGroup):
     """States for banning user dialog."""
 
-    telegram_id = State()
+    user_search = State()
+    user_list = State()
+    user_selection = State()
     reason = State()
     confirmation = State()
 
