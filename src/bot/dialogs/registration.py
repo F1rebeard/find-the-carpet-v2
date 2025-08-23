@@ -42,12 +42,6 @@ async def start_registration_dialog(callback: CallbackQuery, dialog_manager: Dia
         await callback.answer()
 
 
-# first_name_handler = RegistrationFieldHandler("first_name", RegistrationStatesGroup.last_name)
-# last_name_handler = RegistrationFieldHandler("last_name", RegistrationStatesGroup.email)
-# email_handler = RegistrationFieldHandler("email", RegistrationStatesGroup.phone, normalize=str.lower)
-# phone_handler = RegistrationFieldHandler("phone", RegistrationStatesGroup.from_whom)
-# from_whom_handler = RegistrationFieldHandler("from_whom", RegistrationStatesGroup.confirmation)
-
 DIALOG_STRUCTURE = DialogStructure(
     fields=[
         DialogWindowData(

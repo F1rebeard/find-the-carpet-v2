@@ -1,15 +1,11 @@
-import re
 from collections.abc import Callable
 
 from aiogram.fsm.state import State
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
+from src.core_settings import EMAIL_PATTERN, NAME_PATTERN, PHONE_DIGITS_PATTERN
 from src.schemas.users import UserRegistrationInput
-
-NAME_PATTERN = re.compile(r"^[A-ZА-ЯЁ][a-zа-яё\-\s]*$")
-EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-PHONE_DIGITS_PATTERN = re.compile(r"\D")
 
 
 class RegistrationData(BaseModel):

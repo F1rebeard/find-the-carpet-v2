@@ -1,9 +1,16 @@
+import re
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from loguru import logger
 from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Validate fields
+NAME_PATTERN = re.compile(r"^[A-ZА-ЯЁ][a-zа-яё\-\s]*$")
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+PHONE_DIGITS_PATTERN = re.compile(r"\D")
 
 
 class DatabaseSettings(BaseModel):
