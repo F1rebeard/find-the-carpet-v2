@@ -24,9 +24,18 @@ class DatabaseSettings(BaseModel):
     @field_validator("url")
     @classmethod
     def validate_url(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
         if not v:
             raise ValueError("Database URL is not set.")
         return v
+
+    @field_validator("echo", mode="before")
+    @classmethod
+    def normalize_echo(cls, value):
+        if isinstance(value, str):
+            return value.strip()
+        return value
 
 
 class Settings(BaseSettings):
@@ -52,6 +61,28 @@ class Settings(BaseSettings):
         logger.debug(f"🐘 Database URL: {self.DATABASE.url}")
         logger.debug(f"🤖 Bot token: {self.BOT_TOKEN[:5]}***")
         logger.debug(f"🪵 Log level: {self.LOG_LEVEL}")
+
+    @field_validator(
+        "BOT_TOKEN",
+        "LOG_LEVEL",
+        "GOOGLE_SERVICE_ACCOUNT_FILE",
+        "GOOGLE_SPREADSHEET_ID",
+        mode="before",
+    )
+    @classmethod
+    def strip_strings(cls, value):
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("BOT_TOKEN")
+    @classmethod
+    def validate_bot_token(cls, value):
+        if not value:
+            raise ValueError("Bot token is not set.")
+        if " " in value:
+            raise ValueError("Bot token must not contain spaces.")
+        return value
 
 
 base_settings = Settings()
