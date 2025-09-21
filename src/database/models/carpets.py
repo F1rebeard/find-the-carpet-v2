@@ -26,7 +26,9 @@ class Carpet(Base):
 
     __tablename__ = "carpets"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    __table_args__ = {"sqlite_autoincrement": True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     carpet_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)  # manual id
     collection: Mapped[str] = mapped_column(String(64), nullable=False)
     geometry: Mapped[str] = mapped_column(String(32), nullable=False)
