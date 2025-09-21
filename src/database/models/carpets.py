@@ -26,10 +26,7 @@ class Carpet(Base):
 
     __tablename__ = "carpets"
 
-    __table_args__ = {"sqlite_autoincrement": True}
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    carpet_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)  # manual id
+    carpet_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)  # manual id
     collection: Mapped[str] = mapped_column(String(64), nullable=False)
     geometry: Mapped[str] = mapped_column(String(32), nullable=False)
     size: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -64,7 +61,7 @@ class FavoriteCarpets(Base):
         ForeignKey("registered_users.telegram_id", ondelete="CASCADE"), nullable=False
     )
     carpet_id: Mapped[int] = mapped_column(
-        ForeignKey("carpets.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("carpets.carpet_id", ondelete="CASCADE"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

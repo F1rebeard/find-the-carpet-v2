@@ -42,17 +42,16 @@ def upgrade() -> None:
     )
     op.create_table(
         "carpets",
-        sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
-        sa.Column("carper_id", sa.BigInteger(), nullable=False),
+        sa.Column("carpet_id", sa.BigInteger(), nullable=False),
         sa.Column("collection", sa.String(length=64), nullable=False),
         sa.Column("geometry", sa.String(length=32), nullable=False),
         sa.Column("size", sa.String(length=32), nullable=False),
         sa.Column("design", sa.String(length=64), nullable=False),
-        sa.Column("color_1", sa.String(length=32), nullable=False),
-        sa.Column("color_2", sa.String(length=32), nullable=False),
-        sa.Column("color_3", sa.String(length=32), nullable=False),
+        sa.Column("color_1", sa.String(length=32), nullable=True),
+        sa.Column("color_2", sa.String(length=32), nullable=True),
+        sa.Column("color_3", sa.String(length=32), nullable=True),
         sa.Column("style", sa.String(length=32), nullable=False),
-        sa.Column("quality", sa.Integer(), nullable=False),
+        sa.Column("quantity", sa.Integer(), nullable=False),
         sa.Column("price", sa.Double(), nullable=False),
         sa.Column(
             "created_at",
@@ -66,8 +65,7 @@ def upgrade() -> None:
             server_default=sa.text("(CURRENT_TIMESTAMP)"),
             nullable=False,
         ),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("carper_id"),
+        sa.PrimaryKeyConstraint("carpet_id"),
     )
     op.create_table(
         "pending_users",
@@ -126,7 +124,7 @@ def upgrade() -> None:
             server_default=sa.text("(CURRENT_TIMESTAMP)"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["carpet_id"], ["carpets.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["carpet_id"], ["carpets.carpet_id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["registered_users.telegram_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "carpet_id", name="uq_user_carpet"),
@@ -146,7 +144,7 @@ def upgrade() -> None:
         sa.Column("carpet_id", sa.BigInteger(), nullable=False),
         sa.ForeignKeyConstraint(
             ["carpet_id"],
-            ["carpets.id"],
+            ["carpets.carpet_id"],
         ),
         sa.PrimaryKeyConstraint("sale_id"),
     )

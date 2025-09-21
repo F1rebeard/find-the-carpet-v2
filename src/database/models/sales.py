@@ -22,4 +22,4 @@ class SalesData(Base):
     sale_price: Mapped[float] = mapped_column(Double, nullable=False)
     discount: Mapped[float] = mapped_column(Double, nullable=False)
     sold_to: Mapped[str] = mapped_column(String(32), nullable=False)
-    carpet_id: Mapped[int] = mapped_column(ForeignKey("carpets.id"), nullable=False)
+    carpet_id: Mapped[int] = mapped_column(ForeignKey("carpets.carpet_id"), nullable=False)
