@@ -27,16 +27,16 @@ class Carpet(Base):
     __tablename__ = "carpets"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    carper_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)  # manual id
+    carpet_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)  # manual id
     collection: Mapped[str] = mapped_column(String(64), nullable=False)
     geometry: Mapped[str] = mapped_column(String(32), nullable=False)
     size: Mapped[str] = mapped_column(String(32), nullable=False)
     design: Mapped[str] = mapped_column(String(64), nullable=False)
-    color_1: Mapped[str] = mapped_column(String(32), nullable=False)
-    color_2: Mapped[str] = mapped_column(String(32), nullable=False)
-    color_3: Mapped[str] = mapped_column(String(32), nullable=False)
+    color_1: Mapped[str] = mapped_column(String(32), nullable=True)
+    color_2: Mapped[str] = mapped_column(String(32), nullable=True)
+    color_3: Mapped[str] = mapped_column(String(32), nullable=True)
     style: Mapped[str] = mapped_column(String(32), nullable=False)
-    quality: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     price: Mapped[float] = mapped_column(Double, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

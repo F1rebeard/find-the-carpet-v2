@@ -12,6 +12,8 @@ NAME_PATTERN = re.compile(r"^[A-ZА-ЯЁ][a-zа-яё\-\s]*$")
 EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 PHONE_DIGITS_PATTERN = re.compile(r"\D")
 
+GOOGLE_SCOPES = ("https://www.googleapis.com/auth/spreadsheets",)
+
 
 class DatabaseSettings(BaseModel):
     """Database connection settings."""
@@ -35,6 +37,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     ADMIN_IDS: list[int] = []
     INLINE_ROWS_PER_PAGE: int = 3
+    GOOGLE_SERVICE_ACCOUNT_FILE: str
+    GOOGLE_SPREADSHEET_ID: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
