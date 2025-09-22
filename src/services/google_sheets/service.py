@@ -47,6 +47,7 @@ class CarpetsSyncResult:
     inserted: int
     updated: int
     skipped: int
+    bad_data: int = 0
     invalid_report: str | None = None
 
     @property
@@ -75,6 +76,7 @@ class GoogleSheetsCarpetService:
                     inserted=0,
                     updated=0,
                     skipped=0,
+                    bad_data=0,
                     invalid_report="В таблице нету данных.",
                 )
 
@@ -86,6 +88,7 @@ class GoogleSheetsCarpetService:
                 inserted=0,
                 updated=0,
                 skipped=0,
+                bad_data=0,
                 invalid_report="В таблице отсутствует строка заголовков."
             )
 
@@ -102,6 +105,7 @@ class GoogleSheetsCarpetService:
                 inserted=0,
                 updated=0,
                 skipped=0,
+                bad_data=0,
                 invalid_report=invalid_report
             )
         existing_carpets = await self._load_existing_carpets()
@@ -124,19 +128,22 @@ class GoogleSheetsCarpetService:
                 skipped += 1
                 logger.debug(f"⏭️ Carpet unchanged: {payload['carpet_id']}")
 
-        total_rows = len(valid_rows)
+        total_rows = len(valid_rows) + len(invalid_rows)
+        bad_data = total_rows - inserted - updated - skipped
         logger.info(
-            "📊 Carpets sync summary — total:{} inserted:{} updated:{} skipped:{}",
+            "📊 Carpets sync summary — total:{} inserted:{} updated:{} skipped:{} bad_data:{}",
             total_rows,
             inserted,
             updated,
             skipped,
+            bad_data,
         )
         return CarpetsSyncResult(
             total_rows=total_rows,
             inserted=inserted,
             updated=updated,
             skipped=skipped,
+            bad_data=bad_data,
             invalid_report=invalid_report,
         )
 

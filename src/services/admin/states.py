@@ -38,3 +38,10 @@ class BroadcastStatesGroup(StatesGroup):
 
     message = State()
     confirmation = State()
+
+
+class GoogleSheetsSyncStatesGroup(StatesGroup):
+    """States for Google Sheets sync dialog."""
+
+    confirmation = State()
+    processing = State()

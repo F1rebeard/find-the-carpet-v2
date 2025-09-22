@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
@@ -6,10 +8,44 @@ from aiogram_dialog.widgets.kbd import Button
 from loguru import logger
 
 from src.bot.handlers.utils import is_admin_callback, is_admin_message
+from src.core_settings import base_settings
+from src.database import db
 from src.services.admin import states
 from src.services.admin.messages import messages as admin_messages
+from src.services.google_sheets.service import GoogleSheetsCarpetService
 
 admin_menu_router = Router()
+
+
+async def spinning_sync_animation(message):
+    """Show spinning animation with cycling status messages."""
+    statuses = [
+        "🔄 Синхронизация",
+        "🔄 Синхронизация.",
+        "🔄 Синхронизация..",
+        "🔄 Синхронизация...",
+    ]
+
+    index = 0
+    try:
+        while True:
+            await message.edit_text(text=statuses[index % len(statuses)])
+            await asyncio.sleep(0.5)
+            index += 1
+    except asyncio.CancelledError:
+        pass
+
+
+async def perform_actual_sync():
+    """Perform the real Google Sheets sync work."""
+    async with db.get_session() as session:
+        service = GoogleSheetsCarpetService(session=session)
+        result = await service.sync_carpets(
+            spreadsheet_id=base_settings.GOOGLE_SPREADSHEET_ID,
+            worksheet_title="Ковры",
+        )
+        await session.commit()
+        return result
 
 
 @admin_menu_router.message(Command("admin"), is_admin_message)
@@ -107,4 +143,94 @@ async def start_broadcast_dialog(callback: CallbackQuery, dialog_manager: Dialog
     except Exception as e:
         logger.error(f"❌ Error starting broadcast dialog: {e}")
         await callback.message.answer("❌ Ошибка запуска диалога рассылки")
+        await callback.answer()
+
+
+@admin_menu_router.callback_query(F.data == "admin_sync_google_sheets", is_admin_callback)
+async def start_google_sheets_sync(callback: CallbackQuery, dialog_manager: DialogManager):
+    """Start Google Sheets sync confirmation."""
+    try:
+        await callback.message.edit_text(
+            text=admin_messages.sync_google_sheets_prompt,
+            reply_markup=admin_messages.get_confirmation_keyboard("sync_google_sheets"),
+        )
+        await callback.answer()
+        logger.info(f"🔄 Admin {callback.from_user.id} started Google Sheets sync confirmation")
+    except Exception as e:
+        logger.error(f"❌ Error starting Google Sheets sync: {e}")
+        await callback.message.answer("❌ Ошибка запуска синхронизации")
+        await callback.answer()
+
+
+@admin_menu_router.callback_query(F.data == "admin_confirm_sync_google_sheets", is_admin_callback)
+async def confirm_google_sheets_sync(callback: CallbackQuery, dialog_manager: DialogManager):
+    """Execute Google Sheets sync with spinning animation."""
+    try:
+        await callback.answer()
+        await callback.message.edit_text(
+            text="🔄 Инициализация синхронизации...",
+            reply_markup=None,
+        )
+        animation_task = asyncio.create_task(spinning_sync_animation(callback.message))
+        sync_task = asyncio.create_task(perform_actual_sync())
+        done, pending = await asyncio.wait(
+            [sync_task],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        animation_task.cancel()
+        try:
+            await animation_task
+        except asyncio.CancelledError:
+            pass
+
+        result = await done.pop()
+        if result.invalid_report:
+            message_text = admin_messages.sync_completed_with_errors.format(
+                total_rows=result.total_rows,
+                inserted=result.inserted,
+                updated=result.updated,
+                skipped=result.skipped,
+                bad_data=result.bad_data,
+                invalid_report=result.invalid_report,
+            )
+        else:
+            message_text = admin_messages.sync_completed.format(
+                total_rows=result.total_rows,
+                inserted=result.inserted,
+                updated=result.updated,
+                bad_data=result.bad_data,
+                skipped=result.skipped,
+            )
+        await callback.message.edit_text(
+            text=message_text,
+            reply_markup=admin_messages.get_admin_menu_keyboard(),
+        )
+        logger.info(
+            f"✅ Google Sheets sync completed by admin {callback.from_user.id}: "
+            f"total={result.total_rows}, inserted={result.inserted}, "
+            f"updated={result.updated}, skipped={result.skipped}, bad_data={result.bad_data}"
+        )
+
+    except Exception as e:
+        logger.error(f"❌ Error during Google Sheets sync: {e}")
+        error_message = admin_messages.sync_error.format(error=str(e))
+        await callback.message.edit_text(
+            text=error_message,
+            reply_markup=admin_messages.get_admin_menu_keyboard(),
+        )
+
+
+@admin_menu_router.callback_query(F.data == "admin_cancel", is_admin_callback)
+async def cancel_admin_operation(callback: CallbackQuery, dialog_manager: DialogManager):
+    """Cancel admin operation and return to main menu."""
+    try:
+        await callback.message.edit_text(
+            text=admin_messages.admin_welcome,
+            reply_markup=admin_messages.get_admin_menu_keyboard(),
+        )
+        await callback.answer()
+        logger.debug(f"❌ Admin {callback.from_user.id} cancelled operation")
+    except Exception as e:
+        logger.error(f"❌ Error cancelling operation: {e}")
+        await callback.message.answer("❌ Ошибка отмены операции")
         await callback.answer()

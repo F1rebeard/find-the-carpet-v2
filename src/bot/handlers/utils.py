@@ -3,8 +3,8 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button
 
-from core_settings import base_settings
-from services.user_registration import messages
+from src.core_settings import base_settings
+from src.services.user_registration import messages
 
 
 async def reject_non_text(
