@@ -12,7 +12,7 @@ from src.core_settings import base_settings
 from src.database import db
 from src.services.admin import states
 from src.services.admin.messages import messages as admin_messages
-from src.services.google_sheets.service import GoogleSheetsCarpetService
+from src.services.google_sheets.carpets_service import GoogleSheetsCarpetService
 
 admin_menu_router = Router()
 
@@ -42,9 +42,8 @@ async def perform_actual_sync():
         service = GoogleSheetsCarpetService(session=session)
         result = await service.sync_carpets(
             spreadsheet_id=base_settings.GOOGLE_SPREADSHEET_ID,
-            worksheet_title="Ковры",
+            worksheet_title=base_settings.GOOGLE_CARPETS_SHEET_TITLE,
         )
-        await session.commit()
         return result
 
 
@@ -173,10 +172,7 @@ async def confirm_google_sheets_sync(callback: CallbackQuery, dialog_manager: Di
         )
         animation_task = asyncio.create_task(spinning_sync_animation(callback.message))
         sync_task = asyncio.create_task(perform_actual_sync())
-        done, pending = await asyncio.wait(
-            [sync_task],
-            return_when=asyncio.FIRST_COMPLETED
-        )
+        done, pending = await asyncio.wait([sync_task], return_when=asyncio.FIRST_COMPLETED)
         animation_task.cancel()
         try:
             await animation_task

@@ -107,13 +107,7 @@ class CarpetRowFromGoogleSheets(BaseModel):
             return float(value)
         if value is None:
             raise ValueError("Базовая стоимость отсутствует")
-        cleaned = (
-            str(value)
-            .replace("₽", "")
-            .replace(" ", "")
-            .replace("\xa0", "")
-            .replace(",", ".")
-        )
+        cleaned = str(value).replace("₽", "").replace(" ", "").replace("\xa0", "").replace(",", ".")
         if not cleaned:
             raise ValueError("Базовая стоимость отсутствует")
         try:

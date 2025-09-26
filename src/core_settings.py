@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     INLINE_ROWS_PER_PAGE: int = 3
     GOOGLE_SERVICE_ACCOUNT_FILE: str
     GOOGLE_SPREADSHEET_ID: str
+    GOOGLE_CARPETS_SHEET_TITLE: str
+    GOOGLE_SALES_SHEET_TITLE: str
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -61,6 +63,7 @@ class Settings(BaseSettings):
         logger.debug(f"🐘 Database URL: {self.DATABASE.url}")
         logger.debug(f"🤖 Bot token: {self.BOT_TOKEN[:5]}***")
         logger.debug(f"🪵 Log level: {self.LOG_LEVEL}")
+        logger.debug(f"📊 Google Sheets ID: {self.GOOGLE_SPREADSHEET_ID}")
 
     @field_validator(
         "BOT_TOKEN",

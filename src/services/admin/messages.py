@@ -166,7 +166,12 @@ class AdminMessages:
                     )
                 ],
                 [InlineKeyboardButton(text="📢 Рассылка", callback_data="admin_broadcast")],
-                [InlineKeyboardButton(text="🔄 Синхронизация Google Таблиц", callback_data="admin_sync_google_sheets")],
+                [
+                    InlineKeyboardButton(
+                        text="🔄 Синхронизация Google Таблиц",
+                        callback_data="admin_sync_google_sheets",
+                    )
+                ],
             ]
         )
 
