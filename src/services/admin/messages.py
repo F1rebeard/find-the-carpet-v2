@@ -67,11 +67,25 @@ class AdminMessages:
     )
 
     # Google Sheets sync
-    sync_google_sheets_prompt: str = (
+    sync_choose_table_prompt: str = (
+        "🔄 <b>Синхронизация Google Таблиц</b>\n\n"
+        "📊 Выберите таблицу для синхронизации:\n\n"
+        "🔗 <b>Источник:</b> Google Spreadsheet"
+    )
+
+    sync_carpets_prompt: str = (
         "🔄 <b>Синхронизация Google Таблиц</b>\n\n"
         "📊 <b>Таблица:</b> Ковры\n"
         "🔗 <b>Источник:</b> Google Spreadsheet\n\n"
         "⚠️ Синхронизация обновит данные о коврах в базе данных.\n"
+        "Продолжить?"
+    )
+
+    sync_sales_prompt: str = (
+        "🔄 <b>Синхронизация Google Таблиц</b>\n\n"
+        "📊 <b>Таблица:</b> Продажи\n"
+        "🔗 <b>Источник:</b> Google Spreadsheet\n\n"
+        "⚠️ Синхронизация обновит данные о продажах в базе данных.\n"
         "Продолжить?"
     )
 
@@ -145,6 +159,10 @@ class AdminMessages:
     btn_role_moderator: str = "👮 Модератор"
     btn_role_admin: str = "👑 Администратор"
 
+    # Table sync buttons
+    btn_sync_carpets: str = "🧿 Ковры"
+    btn_sync_sales: str = "💰 Продажи"
+
     @staticmethod
     def get_admin_menu_keyboard() -> InlineKeyboardMarkup:
         """Get main admin menu keyboard."""
@@ -177,7 +195,7 @@ class AdminMessages:
 
     @staticmethod
     def get_pending_users_keyboard(users: List[PendingUser]) -> InlineKeyboardMarkup:
-        """Get keyboard with pending users list."""
+        """Get keyboard with a pending users list."""
         buttons = []
         for user in users:
             display_name = f"{user.first_name} {user.last_name or ''}".strip()
@@ -249,6 +267,17 @@ class AdminMessages:
             inline_keyboard=[
                 [InlineKeyboardButton(text="⏭️ Пропустить", callback_data="admin_skip")],
                 [InlineKeyboardButton(text="❌ Отмена", callback_data="admin_cancel")],
+            ]
+        )
+
+    @staticmethod
+    def get_table_selection_keyboard() -> InlineKeyboardMarkup:
+        """Get a table selection keyboard for Google Sheets sync."""
+        return InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🧿 Ковры", callback_data="admin_sync_table_carpets")],
+                [InlineKeyboardButton(text="💰 Продажи", callback_data="admin_sync_table_sales")],
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin_back_to_menu")],
             ]
         )
 

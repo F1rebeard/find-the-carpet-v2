@@ -70,6 +70,8 @@ class Settings(BaseSettings):
         "LOG_LEVEL",
         "GOOGLE_SERVICE_ACCOUNT_FILE",
         "GOOGLE_SPREADSHEET_ID",
+        "GOOGLE_CARPETS_SHEET_TITLE",
+        "GOOGLE_SALES_SHEET_TITLE",
         mode="before",
     )
     @classmethod
