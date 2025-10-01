@@ -1,7 +1,7 @@
 import asyncio
 import contextlib
 
-from aiogram.types import BotCommand, BotCommandScopeChat
+from aiogram.types import BotCommand, BotCommandScopeChat, BotCommandScopeDefault
 from aiogram_dialog import setup_dialogs
 from loguru import logger
 
@@ -16,16 +16,48 @@ from src.database import db
 from src.logger import setup_logger
 
 
+async def clear_commands_for_user(user_id: int):
+    """Clear commands for a specific user."""
+    try:
+        await bot.delete_my_commands(scope=BotCommandScopeChat(chat_id=user_id))
+        logger.info(f"🧹 Cleared commands for user: {user_id}")
+    except Exception as e:
+        logger.debug(f"⚠️ Could not clear commands for user {user_id}: {e}")
+
+
 async def set_commands():
     """Set bot commands depending on user type: an admin or a regular user."""
-    admin_commands = [
-        BotCommand(command="admin", description="👑 Панель администратора"),
+    # Clear all existing commands first to ensure clean state
+    try:
+        await bot.delete_my_commands(scope=BotCommandScopeDefault())
+        logger.info("🧹 Cleared default commands")
+    except Exception as e:
+        logger.debug(f"⚠️ Could not clear default commands: {e}")
+
+    # Default commands for all users
+    default_commands = [
+        BotCommand(command="start", description="🚀 Главное меню"),
     ]
-    for admin_id in base_settings.ADMIN_IDS:
-        await bot.set_my_commands(
-            commands=admin_commands,
-            scope=BotCommandScopeChat(chat_id=admin_id),
-        )
+    await bot.set_my_commands(
+        commands=default_commands,
+        scope=BotCommandScopeDefault(),
+    )
+    logger.info("✅ Set default commands for all users")
+
+    # Admin-specific commands (includes both start and admin)
+    if base_settings.ADMIN_IDS:
+        admin_commands = [
+            BotCommand(command="start", description="🚀 Главное меню"),
+            BotCommand(command="admin", description="👑 Панель администратора"),
+        ]
+        for admin_id in base_settings.ADMIN_IDS:
+            await bot.set_my_commands(
+                commands=admin_commands,
+                scope=BotCommandScopeChat(chat_id=admin_id),
+            )
+            logger.info(f"✅ Set admin commands for admin: {admin_id}")
+    else:
+        logger.info("ℹ️ No admins configured, skipping admin command setup")
 
 
 def register_routers():
@@ -48,7 +80,7 @@ def register_dialogs():
 async def app_lifecycle():
     """Application lifecycle manager."""
     setup_logger()
-    logger.info("🚀 Starting...")
+    logger.info("🚀 Starting telegram-bot...")
     await set_commands()
     register_routers()
     register_dialogs()

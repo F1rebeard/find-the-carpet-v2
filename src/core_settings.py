@@ -64,6 +64,7 @@ class Settings(BaseSettings):
         logger.debug(f"🤖 Bot token: {self.BOT_TOKEN[:5]}***")
         logger.debug(f"🪵 Log level: {self.LOG_LEVEL}")
         logger.debug(f"📊 Google Sheets ID: {self.GOOGLE_SPREADSHEET_ID}")
+        logger.debug(f"👑 Admin IDs: {self.ADMIN_IDS}")
 
     @field_validator(
         "BOT_TOKEN",

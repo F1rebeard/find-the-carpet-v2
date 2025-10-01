@@ -1,9 +1,11 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
+from src.bot.handlers.utils import is_admin_callback
 from src.database import db
+from src.services.admin.messages import messages as admin_messages
 from src.services.start_command import (
     StartCommandAction,
     StartCommandResponse,
@@ -23,27 +25,24 @@ async def _send_response_by_action(message: Message, response: StartCommandRespo
                 text=messages.get_full_message(response.message, messages.new_user_instructions),
                 reply_markup=messages.get_registration_keyboard(),
             )
-
         case StartCommandAction.SHOW_ADMIN_PANEL:
-            await message.answer(messages.get_full_message(response.message, messages.admin_menu))
-
+            await message.answer(
+                text=response.message,
+                reply_markup=messages.get_admin_start_menu_keyboard(),
+            )
         case StartCommandAction.SHOW_MAIN_MENU:
-            await message.answer(messages.get_full_message(response.message, messages.main_menu))
-
+            await message.answer(
+                text=response.message,
+                reply_markup=messages.get_main_menu_keyboard(),
+            )
         case StartCommandAction.SHOW_PENDING_STATUS:
             await message.answer(messages.get_full_message(response.message, messages.pending_info))
-
         case StartCommandAction.SHOW_BANNED_MESSAGE:
             await message.answer(
                 messages.get_full_message(response.message, messages.support_contact)
             )
-
         case StartCommandAction.ERROR:
             await message.answer(response.message)
-
-        case _:
-            logger.warning(f"🤔 Unknown action type: {response.action}")
-            await message.answer(messages.unknown_error)
 
 
 @start_command_router.message(CommandStart())
@@ -62,3 +61,51 @@ async def handle_start_command(message: Message):
     except Exception as e:
         logger.error(f"❌ Error processing start command for {telegram_id}: {e}")
         await message.answer(messages.processing_error)
+
+
+@start_command_router.callback_query(F.data == "admin_panel", is_admin_callback)
+async def handle_admin_panel_redirect(callback: CallbackQuery):
+    """Redirect admin to the full admin panel."""
+    try:
+        await callback.message.edit_text(
+            text=admin_messages.admin_welcome,
+            reply_markup=admin_messages.get_admin_menu_keyboard(),
+        )
+        await callback.answer()
+        logger.info(f"👑 Admin {callback.from_user.id} redirected to admin panel")
+    except Exception as e:
+        logger.error(f"❌ Error redirecting to admin panel: {e}")
+        await callback.answer("❌ Ошибка перехода в админ-панель")
+
+
+@start_command_router.callback_query(F.data == "find_carpets")
+async def handle_find_carpets(callback: CallbackQuery):
+    """Handle find carpets button click."""
+    try:
+        await callback.answer("🔍 Функция поиска ковров будет реализована позже")
+        logger.info(f"🔍 User {callback.from_user.id} clicked find carpets")
+    except Exception as e:
+        logger.error(f"❌ Error handling find carpets: {e}")
+        await callback.answer("❌ Ошибка")
+
+
+@start_command_router.callback_query(F.data == "favorites")
+async def handle_favorites(callback: CallbackQuery):
+    """Handle favorites button click."""
+    try:
+        await callback.answer("❤️ Функция избранного будет реализована позже")
+        logger.info(f"❤️ User {callback.from_user.id} clicked favorites")
+    except Exception as e:
+        logger.error(f"❌ Error handling favorites: {e}")
+        await callback.answer("❌ Ошибка")
+
+
+@start_command_router.callback_query(F.data == "create_pdf")
+async def handle_create_pdf(callback: CallbackQuery):
+    """Handle create PDF button click."""
+    try:
+        await callback.answer("📄 Функция создания PDF будет реализована позже")
+        logger.info(f"📄 User {callback.from_user.id} clicked create PDF")
+    except Exception as e:
+        logger.error(f"❌ Error handling create PDF: {e}")
+        await callback.answer("❌ Ошибка")

@@ -5,10 +5,10 @@ import enum
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core_settings import base_settings as settings
-from services.start_command.messages import messages
+from src.core_settings import base_settings as settings
 from src.dao.user import UserDAO
 from src.database.models import BannedUser, PendingUser, RegisteredUser
+from src.services.start_command.messages import messages
 
 
 class UserType(str, enum.Enum):
@@ -131,7 +131,6 @@ class StartCommandService:
         Returns:
             StartCommandResponse: Response data with appropriate action and message and user data
         """
-
         user_info = await self.determine_user_type(telegram_id)
         match user_info.user_type:
             case UserType.NEW_USER:
@@ -144,13 +143,6 @@ class StartCommandService:
                 return await self._handle_pending_user(user_info)
             case UserType.BANNED_USER:
                 return await self._handle_banned_user(user_info)
-            case _:
-                logger.error(f"🤔 Unknown user type: {user_info.user_type}")
-                return StartCommandResponse(
-                    action=StartCommandAction.ERROR,
-                    message=messages.error_message,
-                    user_type=user_info.user_type.value,
-                )
 
     @staticmethod
     async def _handle_new_user(user_info: UserInfo) -> StartCommandResponse:
