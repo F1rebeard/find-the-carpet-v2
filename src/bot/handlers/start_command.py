@@ -1,11 +1,13 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import CallbackQuery, Message
+from aiogram_dialog import DialogManager, StartMode
 from loguru import logger
 
 from src.bot.handlers.utils import is_admin_callback
 from src.database import db
 from src.services.admin.messages import messages as admin_messages
+from src.services.carpet_search.states import CarpetSearchStatesGroup
 from src.services.start_command import (
     StartCommandAction,
     StartCommandResponse,
@@ -79,14 +81,17 @@ async def handle_admin_panel_redirect(callback: CallbackQuery):
 
 
 @start_command_router.callback_query(F.data == "find_carpets")
-async def handle_find_carpets(callback: CallbackQuery):
-    """Handle find carpets button click."""
+async def handle_find_carpets(callback: CallbackQuery, dialog_manager: DialogManager):
+    """Handle find carpets button click - launch carpet search dialog."""
     try:
-        await callback.answer("🔍 Функция поиска ковров будет реализована позже")
-        logger.info(f"🔍 User {callback.from_user.id} clicked find carpets")
+        await dialog_manager.start(
+            state=CarpetSearchStatesGroup.main_menu, mode=StartMode.RESET_STACK
+        )
+        await callback.answer()
+        logger.info(f"🔍 User {callback.from_user.id} started carpet search")
     except Exception as e:
-        logger.error(f"❌ Error handling find carpets: {e}")
-        await callback.answer("❌ Ошибка")
+        logger.error(f"❌ Error launching carpet search for {callback.from_user.id}: {e}")
+        await callback.answer("❌ Ошибка запуска поиска ковров")
 
 
 @start_command_router.callback_query(F.data == "favorites")

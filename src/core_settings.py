@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     ADMIN_IDS: list[int] = []
     INLINE_ROWS_PER_PAGE: int = 3
+    FILTER_ONLY_AVAILABLE_CARPETS: bool = True
     GOOGLE_SERVICE_ACCOUNT_FILE: str
     GOOGLE_SPREADSHEET_ID: str
     GOOGLE_CARPETS_SHEET_TITLE: str
