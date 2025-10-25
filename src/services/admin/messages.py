@@ -100,8 +100,9 @@ class AdminMessages:
         "• Всего строк: {total_rows}\n"
         "• Добавлено: {inserted}\n"
         "• Обновлено: {updated}\n"
+        "• Удалено: {deleted}\n"
         "• Ошибка в данных: {bad_data}\n"
-        "• Пропущено: {skipped}\n"
+        "• Без изменений: {skipped}\n"
     )
 
     sync_completed_with_errors = (
@@ -110,8 +111,9 @@ class AdminMessages:
         "• Всего строк: {total_rows}\n"
         "• Добавлено: {inserted}\n"
         "• Обновлено: {updated}\n"
+        "• Удалено: {deleted}\n"
         "• Ошибка в данных: {bad_data}\n"
-        "• Пропущено: {skipped}\n\n"
+        "• Без изменений: {skipped}\n\n"
         "❌ <b>Ошибки валидации:</b>\n{invalid_report}"
     )
 

@@ -41,22 +41,22 @@ class DatabaseSettings(BaseModel):
 class Settings(BaseSettings):
     """App settings loaded from environment variables."""
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+    )
+
     DATABASE: DatabaseSettings
     BOT_TOKEN: str
     LOG_LEVEL: str = "INFO"
-    ADMIN_IDS: list[int] = []
+    ADMIN_IDS: list
     INLINE_ROWS_PER_PAGE: int = 3
     FILTER_ONLY_AVAILABLE_CARPETS: bool = True
     GOOGLE_SERVICE_ACCOUNT_FILE: str
     GOOGLE_SPREADSHEET_ID: str
     GOOGLE_CARPETS_SHEET_TITLE: str
     GOOGLE_SALES_SHEET_TITLE: str
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_nested_delimiter="__",
-    )
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -74,6 +74,7 @@ class Settings(BaseSettings):
         "GOOGLE_SPREADSHEET_ID",
         "GOOGLE_CARPETS_SHEET_TITLE",
         "GOOGLE_SALES_SHEET_TITLE",
+        "FILTER_ONLY_AVAILABLE_CARPETS",
         mode="before",
     )
     @classmethod

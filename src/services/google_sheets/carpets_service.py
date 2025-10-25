@@ -1,6 +1,7 @@
 from typing import Any
 
-from sqlalchemy import select
+from loguru import logger
+from sqlalchemy import delete, select
 
 from src.database.models.carpets import Carpet
 from src.schemas.carpers_from_google_sh import CarpetRowFromGoogleSheets
@@ -49,6 +50,7 @@ class GoogleSheetsCarpetService(BaseGoogleSheetsService[CarpetRowFromGoogleSheet
         for field, new_value in payload.items():
             current_value = getattr(carpet, field)
             if field == "price":
+
                 # Compare floats with tolerance to avoid noisy updates
                 if current_value is None and new_value is not None:
                     return True
@@ -64,6 +66,58 @@ class GoogleSheetsCarpetService(BaseGoogleSheetsService[CarpetRowFromGoogleSheet
                     return True
         return False
 
+    async def sync_data(
+        self, spreadsheet_id: str, worksheet_title: str | None = None
+    ) -> SyncResult:
+        """Synchronize carpets from Google Sheets with deletion support."""
+        # First, perform the standard sync (insert/update/skip)
+        result = await super().sync_data(spreadsheet_id, worksheet_title)
+
+        # If sync failed or returned early, skip deletion
+        if result.total_rows == 0:
+            return result
+
+        # Load existing records and determine which ones to delete
+        existing_records = await self.load_existing_records()
+
+        # Get carpet IDs from the sheet data
+        values = await self.sheet_client.fetch_all(spreadsheet_id, worksheet_title)
+        if not values or len(values) < 2:
+            return result
+
+        header, *rows = values
+        from src.services.google_sheets.utils import parse_table_from_google_sheets
+
+        valid_rows, _ = parse_table_from_google_sheets(
+            rows=rows,
+            header=header,
+            model=self.get_schema_model(),
+        )
+
+        sheet_carpet_ids = {row.carpet_id for row in valid_rows}
+        carpet_ids_to_delete = set(existing_records.keys()) - sheet_carpet_ids
+
+        # Delete carpets that are no longer in the sheet
+        deleted_count = 0
+        if carpet_ids_to_delete:
+            logger.debug(f"🗑️ Carpets to delete: {carpet_ids_to_delete}")
+            stmt = delete(Carpet).where(Carpet.carpet_id.in_(carpet_ids_to_delete))
+            delete_result = await self.session.execute(stmt)
+            deleted_count = delete_result.rowcount or 0
+            logger.info(f"🗑️ Deleted {deleted_count} carpet(s) from database")
+
+        # Return updated result with deletion count
+        return SyncResult(
+            entity_name=result.entity_name,
+            total_rows=result.total_rows,
+            inserted=result.inserted,
+            updated=result.updated,
+            skipped=result.skipped,
+            bad_data=result.bad_data,
+            deleted=deleted_count,
+            invalid_report=result.invalid_report,
+        )
+
     async def sync_carpets(
         self, spreadsheet_id: str, worksheet_title: str | None = None
     ) -> CarpetsSyncResult:
@@ -78,5 +132,6 @@ class GoogleSheetsCarpetService(BaseGoogleSheetsService[CarpetRowFromGoogleSheet
             updated=result.updated,
             skipped=result.skipped,
             bad_data=result.bad_data,
+            deleted=result.deleted,
             invalid_report=result.invalid_report,
         )

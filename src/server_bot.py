@@ -46,7 +46,7 @@ async def set_commands():
     logger.info("✅ Set default commands for all users")
 
     # Admin-specific commands (includes both start and admin)
-    if base_settings.ADMIN_IDS:
+    if len(base_settings.ADMIN_IDS) > 0:
         admin_commands = [
             BotCommand(command="start", description="🚀 Главное меню"),
             BotCommand(command="admin", description="👑 Панель администратора"),
@@ -81,12 +81,11 @@ def register_dialogs():
 @contextlib.asynccontextmanager
 async def app_lifecycle():
     """Application lifecycle manager."""
-    setup_logger()
     logger.info("🚀 Starting telegram-bot...")
-    await set_commands()
+    setup_logger()
     register_routers()
     register_dialogs()
-
+    await set_commands()
     await db.connect()
     try:
         yield {"telegram_bot": bot}

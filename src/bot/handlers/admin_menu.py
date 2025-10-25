@@ -73,6 +73,7 @@ async def perform_sync_with_animation(
                 total_rows=result.total_rows,
                 inserted=result.inserted,
                 updated=result.updated,
+                deleted=result.deleted,
                 skipped=result.skipped,
                 bad_data=result.bad_data,
                 invalid_report=result.invalid_report,
@@ -82,6 +83,7 @@ async def perform_sync_with_animation(
                 total_rows=result.total_rows,
                 inserted=result.inserted,
                 updated=result.updated,
+                deleted=result.deleted,
                 bad_data=result.bad_data,
                 skipped=result.skipped,
             )
@@ -92,7 +94,7 @@ async def perform_sync_with_animation(
         logger.info(
             f"✅ {table_name} sync completed by admin {callback.from_user.id}: "
             f"total={result.total_rows}, inserted={result.inserted}, "
-            f"updated={result.updated}, skipped={result.skipped}, bad_data={result.bad_data}"
+            f"updated={result.updated}, deleted={result.deleted}, skipped={result.skipped}, bad_data={result.bad_data}"
         )
 
     except Exception as e:

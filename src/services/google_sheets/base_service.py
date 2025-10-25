@@ -24,11 +24,12 @@ class SyncResult:
     updated: int
     skipped: int
     bad_data: int = 0
+    deleted: int = 0
     invalid_report: str | None = None
 
     @property
     def has_changes(self) -> bool:
-        return (self.inserted + self.updated) > 0
+        return (self.inserted + self.updated + self.deleted) > 0
 
 
 class BaseGoogleSheetsService(ABC, Generic[T, K, E]):
